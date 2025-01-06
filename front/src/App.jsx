@@ -9,6 +9,31 @@ function App() {
   const [isAuth, setIsAuth] = useState(false);
   const [message, setMessage] = useState();
 
+  const handleRegister = async () => {
+    if (login === null || password === null) {
+      setMessage('Veuillez saisir les datas');
+      return;
+    }
+
+    const values = { login: login, password: password };
+
+    const { data } = await axios.post('http://localhost:3001/signup', {
+      method: 'POST',
+      values: values,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log(data);
+
+    if (data?.message && data?.user) {
+      setMessage(data?.message);
+    } else {
+      setMessage(data?.message);
+    }
+  };
+
   const handleLogin = async () => {
     if (login === null || password === null) {
       setMessage('Veuillez saisir les datas');
@@ -26,6 +51,7 @@ function App() {
 
     if (data?.token) {
       setIsAuth(true);
+      localStorage.setItem('tokenClement', data?.token);
     } else {
       setIsAuth(false);
       setMessage('Password erronné');
@@ -72,6 +98,7 @@ function App() {
           <div>
             {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
             <button onClick={handleLogin}>Je me connecte</button>
+            <button onClick={handleRegister}>Je crée mon compte</button>
           </div>
         </div>
       )}
