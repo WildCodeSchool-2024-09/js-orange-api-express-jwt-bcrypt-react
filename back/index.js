@@ -1,10 +1,11 @@
 const express = require('express');
+require('dotenv').config();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 // Connection à Mysql
 const { db } = require('./config/db');
-const { checkUser, checkPassword } = require('./middlewares/auth');
+const { checkUser, checkPassword, checkToken } = require('./middlewares/auth');
 const app = express();
 
 app.use(express.json());
@@ -18,7 +19,7 @@ app.post('/signin', [checkUser, checkPassword], async (req, res) => {
   const { login } = req.body.values;
 
   try {
-    const token = jwt.sign({ login: login }, 'yavuzsecret', {
+    const token = jwt.sign(login, process.env.SECRET, {
       expiresIn: '2 days',
     });
     res.send({ token: token });
@@ -44,17 +45,21 @@ app.post('/signup', async (req, res) => {
     }
 
     const passBDD = bcrypt.hashSync(password, 8);
+    // $2a$08$c/QeP4Snn.19k2s3h/PHfOcOjsQt3CnHXLp70Uyd3hvcUciafPVf6
 
     const result = await db.query(
       `INSERT INTO users  (name,login,password) VALUES ('${login}','${login}','${passBDD}')`
     );
 
-    console.log(result);
     return res.send({ message: 'Hola', user: true });
   } catch (e) {
     console.log(e.message);
     res.send({ message: 'Erreur technique' });
   }
+});
+
+app.get('/check', [checkToken], async (req, res) => {
+  return res.send({ check: true });
 });
 
 app.listen(3001, () =>

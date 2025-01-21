@@ -1,62 +1,14 @@
 import { useState } from 'react';
 import './App.css';
-import axios from 'axios';
+import { useAuth } from './hooks/useAuth';
 
 function App() {
+  const { handleLogin, handleRegister, handleLogout, isAuth, message } =
+    useAuth();
+
   const [login, setLogin] = useState(null);
   const [password, setPassword] = useState(null);
   const [type, setType] = useState('password');
-  const [isAuth, setIsAuth] = useState(false);
-  const [message, setMessage] = useState();
-
-  const handleRegister = async () => {
-    if (login === null || password === null) {
-      setMessage('Veuillez saisir les datas');
-      return;
-    }
-
-    const values = { login: login, password: password };
-
-    const { data } = await axios.post('http://localhost:3001/signup', {
-      method: 'POST',
-      values: values,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    console.log(data);
-
-    if (data?.message && data?.user) {
-      setMessage(data?.message);
-    } else {
-      setMessage(data?.message);
-    }
-  };
-
-  const handleLogin = async () => {
-    if (login === null || password === null) {
-      setMessage('Veuillez saisir les datas');
-      return;
-    }
-
-    const values = { login: login, password: password };
-    const { data } = await axios.post('http://localhost:3001/signin', {
-      method: 'POST',
-      values: values,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (data?.token) {
-      setIsAuth(true);
-      localStorage.setItem('tokenClement', data?.token);
-    } else {
-      setIsAuth(false);
-      setMessage('Password erronné');
-    }
-  };
 
   return (
     <>
@@ -64,7 +16,8 @@ function App() {
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div>Je suis connecté en tant que {login}</div>
           <div>
-            <button onClick={() => setIsAuth(false)}>Je me déconnecte</button>
+            {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
+            <button onClick={handleLogout}>Je me déconnecte</button>
           </div>
         </div>
       ) : (
@@ -92,13 +45,18 @@ function App() {
             <button
               onClick={() => setType(type === 'password' ? 'text' : 'password')}
             >
-              {type === 'password' ? 'Affciher' : 'Cacher'} mon mot de passe
+              {type === 'password' ? 'Afficher' : 'Cacher'} mon mot de passe
             </button>
           </div>
           <div>
             {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
-            <button onClick={handleLogin}>Je me connecte</button>
-            <button onClick={handleRegister}>Je crée mon compte</button>
+            <button onClick={() => handleLogin(login, password)}>
+              Je me connecte
+            </button>
+            {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
+            <button onClick={() => handleRegister(login, password)}>
+              Je crée mon compte
+            </button>
           </div>
         </div>
       )}

@@ -1,7 +1,23 @@
 const { db } = require('../config/db');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
-const checkToken = (req, res, next) => {};
+const checkToken = (req, res, next) => {
+  const token = req.headers['token'];
+
+  if (!token) {
+    return res.status(401).send({ check: false });
+  }
+
+  jwt.verify(token, process.env.SECRET, (error, decoded) => {
+    if (error) {
+      return res.status(401).send({ check: false });
+    }
+
+    console.log('decoded', decoded);
+  });
+  next();
+};
 
 const checkUser = async (req, res, next) => {
   const { login, password } = req.body.values;
