@@ -8,27 +8,32 @@ const bcrypt = require('bcryptjs');
 const { db } = require('./config/db');
 const { checkUser, checkPassword, checkToken } = require('./middlewares/auth');
 const fileUpload = require('./middlewares/multer');
+
 const app = express();
 
 app.use(express.json());
 app.use(cors());
-
 app.use('/uploads', express.static(path.join(__dirname, './public/uploads')));
 
 app.get('/', (req, res) => {
   res.send({ message: 'Ouai, nous sommes les musclés' });
 });
 
-app.post('/image', [fileUpload], (req, res) => {
+app.post('/image', [fileUpload], async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({
+    return res.send({
       error: 'Aucun fichier envoyé ou type de fichier non supporté.',
     });
   }
 
+  console.log(req.body.login);
+  const [rows, fields] = await db.query(
+    `UPDATE users SET image='${req.file.filename}' WHERE login='${req.body.login}'`
+  );
+
   return res.send({
-    message: 'Fichier uploadé avec succès !',
-    filePath: `/uploads/${req.file.filename}`,
+    message: 'Hamdulilah, tout va bien',
+    file: `/uploads/${req.file.filename}`,
   });
 });
 
@@ -39,7 +44,19 @@ app.post('/signin', [checkUser, checkPassword], async (req, res) => {
     const token = jwt.sign({ login: login }, process.env.SECRET, {
       expiresIn: '2 days',
     });
-    res.send({ token: token });
+
+    const [rows, fields] = await db.query(
+      `SELECT * FROM users WHERE login='${login}'`
+    );
+
+    const user = {
+      id: rows[0].id,
+      name: rows[0].name,
+      login: rows[0].login,
+      image: rows[0].image,
+    };
+
+    res.send({ user: user, token: token });
   } catch (e) {
     console.log(e.message);
     res.send({ message: 'Erreur technique' });
