@@ -6,6 +6,7 @@ export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [isAuth, setIsAuth] = useState(false);
+  const [user, setUser] = useState(null);
   const [message, setMessage] = useState();
 
   const handleRegister = async (login, password) => {
@@ -50,6 +51,7 @@ export const AuthProvider = ({ children }) => {
 
     if (data?.token) {
       setIsAuth(true);
+      setUser(data?.user);
       localStorage.setItem('tokenClement', data?.token);
     } else {
       setIsAuth(false);
@@ -90,7 +92,14 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ handleLogin, handleRegister, handleLogout, isAuth, message }}
+      value={{
+        handleLogin,
+        handleRegister,
+        handleLogout,
+        isAuth,
+        message,
+        user,
+      }}
     >
       {children}
     </AuthContext.Provider>

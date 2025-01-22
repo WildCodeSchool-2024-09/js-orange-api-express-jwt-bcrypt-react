@@ -1,68 +1,52 @@
-import { useState } from 'react';
 import axios from 'axios';
+import React, { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
-function Form({ setFilesDisplay }) {
+const Form = ({ login }) => {
   const [files, setFiles] = useState([]);
-  const [name, setName] = useState('');
-  const handleForm = async (e) => {
+  const { user } = useAuth();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const formData = new FormData();
 
     formData.append('file', files[0]);
-    formData.append('name', name);
+    formData.append('login', login);
 
-    const data = await axios
-      .post('http://localhost:3001/image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      .then(() => setFilesDisplay([]));
-
-    console.log(data);
+    await axios.post('http://localhost:3001/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
   };
 
   return (
-    <form onSubmit={handleForm} className="w-40">
-      <div style={{ textAlign: 'center' }}>
-        <div
-          style={{
-            height: '12rem',
-            backgroundColor: 'lightgray',
-            marginBottom: '1rem',
-          }}
-        >
-          {files.length > 0 && (
+    <form onSubmit={handleSubmit} style={{ margin: 10 }}>
+      {files.length > 0 ||
+        (user?.image && (
+          <div>
             <img
-              style={{ height: '12rem' }}
-              src={URL.createObjectURL(files[0])}
+              height={100}
+              src={
+                user?.image
+                  ? `http://localhost:3001/uploads/${user?.image}`
+                  : URL.createObjectURL(files[0])
+              }
+              alt="Mon avatar"
             />
-          )}
-        </div>
-      </div>
-      <div className="form-group mb-2">
-        <label htmlFor="inputName">Nom</label>
+          </div>
+        ))}
+      <div>
         <input
-          onChange={(e) => setName(e.target.value)}
-          className="form-control"
-          name="inputName"
-          type="text"
-        />
-      </div>
-      <div className="form-group mb-4">
-        <label htmlFor="inputFile">Image</label>
-        <br />
-        <input
-          onChange={(e) => setFiles(e.target.files)}
-          className="form-control-file"
-          name="inputFile"
           type="file"
+          name="inputFile"
+          onChange={(e) => setFiles(e.target.files)}
         />
       </div>
-      <button type="submit" className="btn btn-primary">
-        Envoyer
-      </button>
+      <div>
+        <button>Envoyer</button>
+      </div>
     </form>
   );
-}
+};
 
 export default Form;
