@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 require('dotenv').config();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -6,20 +7,36 @@ const bcrypt = require('bcryptjs');
 // Connection à Mysql
 const { db } = require('./config/db');
 const { checkUser, checkPassword, checkToken } = require('./middlewares/auth');
+const fileUpload = require('./middlewares/multer');
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 
+app.use('/uploads', express.static(path.join(__dirname, './public/uploads')));
+
 app.get('/', (req, res) => {
   res.send({ message: 'Ouai, nous sommes les musclés' });
+});
+
+app.post('/image', [fileUpload], (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({
+      error: 'Aucun fichier envoyé ou type de fichier non supporté.',
+    });
+  }
+
+  return res.send({
+    message: 'Fichier uploadé avec succès !',
+    filePath: `/uploads/${req.file.filename}`,
+  });
 });
 
 app.post('/signin', [checkUser, checkPassword], async (req, res) => {
   const { login } = req.body.values;
 
   try {
-    const token = jwt.sign(login, process.env.SECRET, {
+    const token = jwt.sign({ login: login }, process.env.SECRET, {
       expiresIn: '2 days',
     });
     res.send({ token: token });
